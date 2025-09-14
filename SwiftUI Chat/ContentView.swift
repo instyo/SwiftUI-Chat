@@ -13,8 +13,9 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if let user = auth.firebaseUser {
+            if let user = auth.appUser {
                 ChatListView()
+                    .environmentObject(FriendsViewModel(currentUser: user))
             } else {
                 NavigationView {
                     if showingLogin {

@@ -17,6 +17,8 @@ struct Sign_In_Options_ExampleApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(AuthViewModel.shared)
+                .environmentObject(MemberViewModel.shared)
+                
         }
     }
 }
