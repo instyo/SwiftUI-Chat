@@ -32,29 +32,15 @@ struct ChatListView: View {
                 if isLoading {
                     ProgressView()
                 } else {
-                    NavigationLink(destination: SearchView()) {
-                        Text("See chats")
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(users) { user in
+                                UserListTile(user: user)
+                            }
+                        }
                     }
                 }
             }
-//            VStack {
-//                Text("Hello World")
-//                
-//                if let user = auth.appUser {
-//                    Text(user.displayName)
-//                    Text(user.email)
-//                    CachedAsyncImage(url: user.imageUrl!)
-//                        .frame(width: 120, height: 120)
-//                }
-//                
-//                Button("Logout") {
-//                    do {
-//                        try auth.signOut()
-//                    } catch {
-//                        print(error.localizedDescription)
-//                    }
-//                }
-//            }
         }
         .onChange(of: searchText) { old, new in
             // Cancel previous task if still running
@@ -70,7 +56,64 @@ struct ChatListView: View {
             }
         }
         .onAppear {
-            searchUsers(with: "bbbh@hh.com")
+//            searchUsers(with: "bbbh@hh.com")
+            isLoading = true
+            member.getAllUsers(myEmail: auth.firebaseUser?.email ?? "") { data in
+                self.users = data
+                isLoading = false
+            }
+        }
+    }
+}
+
+struct UserListTile: View {
+    let user: ChatUser
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Animal Image
+            Circle()
+                .fill(Color.gray.opacity(0.1))
+                .frame(width: 48, height: 48)
+                .overlay(
+                    AsyncImage(url: URL(string: user.profilePicture)) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 48, height: 48)
+                        } else if phase.error != nil {
+                            Text("Failed to load")
+                        } else {
+                            ProgressView()
+                        }
+                    }
+                )
+            
+            // Text Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(user.displayName)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Text(user.email)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            // Chevron
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.gray)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Handle tap action
         }
     }
 }

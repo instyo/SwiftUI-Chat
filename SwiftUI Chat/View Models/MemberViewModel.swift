@@ -10,6 +10,16 @@ import FirebaseFirestore
 final class MemberViewModel: ObservableObject {
     static let shared = MemberViewModel()
     
+    func getAllUsers(myEmail: String, completion: @escaping ([ChatUser]) -> Void) {
+        Firestore.firestore().collection("users")
+            .whereField("email", isNotEqualTo: myEmail)
+            .getDocuments { snap, err in
+                guard let docs = snap?.documents else { completion([]); return }
+                let users = docs.compactMap { try? $0.data(as: ChatUser.self)}
+                completion(users)
+            }
+    }
+    
     func searchUsers(byEmail email: String, completion: @escaping ([ChatUser]) -> Void) {
         Firestore.firestore().collection("users")
             .whereField("email", isEqualTo: email)

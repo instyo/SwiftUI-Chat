@@ -131,4 +131,23 @@ class FriendsViewModel: ObservableObject {
                 self?.friends = docs.compactMap { try? $0.data(as: ChatUser.self) }
             }
     }
+
+    // Fetch a ChatUser by id. Useful for resolving the sender of a FriendRequest
+    func fetchUser(userId: String, completion: @escaping (ChatUser?) -> Void) {
+        db.collection("users").document(userId).getDocument { snapshot, err in
+            if let err = err {
+                print("❌ [fetchUser] Error fetching user (\(userId)): \(err.localizedDescription)")
+                completion(nil)
+                return
+            }
+
+            guard let snapshot = snapshot, snapshot.exists else {
+                completion(nil)
+                return
+            }
+
+            let user = try? snapshot.data(as: ChatUser.self)
+            completion(user)
+        }
+    }
 }
