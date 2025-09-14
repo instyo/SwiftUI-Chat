@@ -1,17 +1,22 @@
-//
-//  SwiftUI_ChatApp.swift
-//  SwiftUI Chat
-//
-//  Created by ikhwan on 14/09/25.
-//
-
 import SwiftUI
+import FirebaseCore
 
+class AppDelegate: NSObject, UIApplicationDelegate {
+  func application(_ application: UIApplication,
+                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    FirebaseApp.configure()
+    return true
+  }
+}
 @main
-struct SwiftUI_ChatApp: App {
+struct Sign_In_Options_ExampleApp: App {
+    // register app delegate for Firebase setup
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(AuthViewModel.shared)
         }
     }
 }

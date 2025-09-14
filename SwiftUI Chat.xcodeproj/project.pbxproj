@@ -6,8 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4427FEF62E76E3050055424C /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4427FEF52E76E3050055424C /* FirebaseAuth */; };
+		4427FEF82E76E3050055424C /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4427FEF72E76E3050055424C /* FirebaseCore */; };
+		4427FEFA2E76E3050055424C /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4427FEF92E76E3050055424C /* FirebaseFirestore */; };
+		4427FF172E76FCF00055424C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4427FF162E76FCF00055424C /* GoogleService-Info.plist */; };
+		4427FF382E77002B0055424C /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 4427FF372E77002B0055424C /* CachedAsyncImage */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4427FEE42E76E2650055424C /* SwiftUI Chat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftUI Chat.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4427FF162E76FCF00055424C /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +32,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4427FEF82E76E3050055424C /* FirebaseCore in Frameworks */,
+				4427FF382E77002B0055424C /* CachedAsyncImage in Frameworks */,
+				4427FEF62E76E3050055424C /* FirebaseAuth in Frameworks */,
+				4427FEFA2E76E3050055424C /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,6 +45,7 @@
 		4427FEDB2E76E2650055424C = {
 			isa = PBXGroup;
 			children = (
+				4427FF162E76FCF00055424C /* GoogleService-Info.plist */,
 				4427FEE62E76E2650055424C /* SwiftUI Chat */,
 				4427FEE52E76E2650055424C /* Products */,
 			);
@@ -65,6 +79,10 @@
 			);
 			name = "SwiftUI Chat";
 			packageProductDependencies = (
+				4427FEF52E76E3050055424C /* FirebaseAuth */,
+				4427FEF72E76E3050055424C /* FirebaseCore */,
+				4427FEF92E76E3050055424C /* FirebaseFirestore */,
+				4427FF372E77002B0055424C /* CachedAsyncImage */,
 			);
 			productName = "SwiftUI Chat";
 			productReference = 4427FEE42E76E2650055424C /* SwiftUI Chat.app */;
@@ -94,6 +112,10 @@
 			);
 			mainGroup = 4427FEDB2E76E2650055424C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4427FEF42E76E3050055424C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				4427FF362E77002B0055424C /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4427FEE52E76E2650055424C /* Products */;
 			projectDirPath = "";
@@ -109,6 +131,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4427FF172E76FCF00055424C /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,6 +347,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4427FEF42E76E3050055424C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.2.0;
+			};
+		};
+		4427FF362E77002B0055424C /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4427FEF52E76E3050055424C /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4427FEF42E76E3050055424C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		4427FEF72E76E3050055424C /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4427FEF42E76E3050055424C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		4427FEF92E76E3050055424C /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4427FEF42E76E3050055424C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		4427FF372E77002B0055424C /* CachedAsyncImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4427FF362E77002B0055424C /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;
+			productName = CachedAsyncImage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4427FEDC2E76E2650055424C /* Project object */;
 }

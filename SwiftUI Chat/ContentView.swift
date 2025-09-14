@@ -8,17 +8,22 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var showingLogin = true
+    @EnvironmentObject private var auth: AuthViewModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if let user = auth.firebaseUser {
+                ChatListView()
+            } else {
+                NavigationView {
+                    if showingLogin {
+                        LoginView(showingLogin: $showingLogin)
+                    } else {
+                        RegisterView(showingLogin: $showingLogin)
+                    }
+                }
+            }
         }
-        .padding()
     }
-}
-
-#Preview {
-    ContentView()
 }
