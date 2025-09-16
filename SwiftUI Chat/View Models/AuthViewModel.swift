@@ -46,7 +46,7 @@ final class AuthViewModel : ObservableObject {
             }
             
             let randomSeed = Int.random(in: 10...10000)
-            let profilePicture = "https://api.dicebear.com/7.x/adventurer/jpg?seed=\(randomSeed)"
+            let profilePicture = "https://api.dicebear.com/9.x/adventurer/jpg?seed=\(randomSeed)"
             
             let userDoc = ChatUser(id: user.uid, displayName: displayName, email: email, createdAt: Date(), profilePicture: profilePicture)
             

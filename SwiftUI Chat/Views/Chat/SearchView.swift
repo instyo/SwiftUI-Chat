@@ -20,9 +20,7 @@ struct SearchView: View {
                 .padding()
 
             Button("Search") {
-                friendsVM.searchUsers(byEmail: email) { userList in
-                    self.userList = userList
-                }
+                
             }
 
             List(userList) { user in

@@ -11,8 +11,20 @@ import FirebaseFirestore
 
 struct FriendRequest: Identifiable, Codable {
     @DocumentID var id: String?
-    var fromId: String
-    var toId: String
+    var fromUserId: String
+    var fromUserName: String
+    var fromUserEmail: String
+    var fromUserProfilePicture: String
+    var toUserId: String
     var status: String
     var createdAt: Date
+    
+    var profileImageUrl: URL? {
+        return URL(string: fromUserProfilePicture)
+    }
+}
+
+enum FriendRequestStatus {
+    case pending
+    case accepted
 }

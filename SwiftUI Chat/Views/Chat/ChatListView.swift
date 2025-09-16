@@ -10,64 +10,62 @@ import CachedAsyncImage
 
 struct ChatListView: View {
     @EnvironmentObject private var auth: AuthViewModel
-    @EnvironmentObject private var member: MemberViewModel
-    @State private var searchText = ""
+    @EnvironmentObject private var friend: FriendsViewModel
+    @EnvironmentObject private var usersVM: UsersViewModel
     @State private var isLoading = true
-    @State private var debounceTask: Task<Void, Never>? = nil
-    @State private var users: [ChatUser] = []
+    @State private var showingFriendRequest: Bool = false
     
-    private func searchUsers(with email: String) {
-        isLoading = true
-        
-        member.searchUsers(byEmail: email) { users in
-            self.users = users
-            isLoading = false
-        }
-    }
-
     var body: some View {
         NavigationStack {
-            
             VStack {
                 if isLoading {
                     ProgressView()
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 8) {
-                            ForEach(users) { user in
+                            ForEach(usersVM.users) { user in
                                 UserListTile(user: user)
                             }
                         }
                     }
                 }
             }
-        }
-        .onChange(of: searchText) { old, new in
-            // Cancel previous task if still running
-            debounceTask?.cancel()
-            
-            // Start new debounce task
-            debounceTask = Task {
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+            .sheet(isPresented: $showingFriendRequest, content: {
+                FriendRequestListView()
+            })
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading, content: {
+                    Button("Friend Request") {
+                        showingFriendRequest = true
+                    }
+                })
                 
-                if !Task.isCancelled {
-                   searchUsers(with: new)
-                }
+                ToolbarItem(placement: .topBarTrailing, content: {
+                    Button("Logout") {
+                        do {
+                            try auth.signOut()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                })
             }
+            .navigationTitle("Users")
+            .navigationBarTitleDisplayMode(.inline)
         }
+        
         .onAppear {
-//            searchUsers(with: "bbbh@hh.com")
             isLoading = true
-            member.getAllUsers(myEmail: auth.firebaseUser?.email ?? "") { data in
-                self.users = data
-                isLoading = false
-            }
+            usersVM.fetchUsers()
+            isLoading = false
         }
     }
 }
 
 struct UserListTile: View {
     let user: ChatUser
+    @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var usersVM: UsersViewModel
     
     var body: some View {
         HStack(spacing: 16) {
@@ -97,17 +95,29 @@ struct UserListTile: View {
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
                 
-                Text(user.email)
+                Text(user.id ?? "")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.gray)
+            if usersVM.requestedUserIds.contains(user.id ?? "") {
+                Text("Request Sent")
+                    .foregroundColor(.gray)
+                    .font(.subheadline)
+            } else if usersVM.receivedUserIds.contains(user.id ?? "") {
+                Button("Approve Request") {
+                    usersVM.acceptRequest(from: user.id ?? "")
+                }
+            } else {
+                Button("Add Friend") {
+                    if let userId = user.id {
+                        usersVM.sendFriendRequest(to: userId)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

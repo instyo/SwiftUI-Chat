@@ -10,74 +10,126 @@ struct FriendRequestsView: View {
     var body: some View {
         List {
             ForEach(friendsVM.friendRequests) { request in
-                HStack(spacing: 12) {
-                    if let user = senderUsers[request.fromId] {
-                        CachedAsyncImage(url: user.imageUrl)
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                    } else {
-                        Circle()
-                            .fill(Color.secondary.opacity(0.3))
-                            .frame(width: 44, height: 44)
+                FriendRequestRowView(
+                    request: request,
+                    senderUser: senderUsers[request.fromUserId],
+                    onAppear: {
+                        
+                    },
+                    onAccept: {
+                        friendsVM.acceptRequest(request)
+                    },
+                    onReject: {
+                        friendsVM.rejectRequest(request)
                     }
-
-                    VStack(alignment: .leading) {
-                        if let user = senderUsers[request.fromId] {
-                            Text(user.displayName).font(.headline)
-                            Text(user.email).font(.subheadline).foregroundColor(.secondary)
-                        } else {
-                            Text("Loading...")
-                                .foregroundColor(.secondary)
-                        }
-                        Text(request.createdAt, style: .date)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    Spacer()
-
-                    HStack(spacing: 8) {
-                        Button(action: { friendsVM.acceptRequest(request) }) {
-                            Text("Accept")
-                                .font(.subheadline)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 10)
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(6)
-                        }
-
-                        Button(action: { friendsVM.rejectRequest(request) }) {
-                            Text("Decline")
-                                .font(.subheadline)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 10)
-                                .background(Color(.systemGray5))
-                                .foregroundColor(.primary)
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-                .onAppear {
-                    // Fetch sender user if not already present
-                    if senderUsers[request.fromId] == nil {
-                        friendsVM.fetchUser(userId: request.fromId) { user in
-                            if let user = user {
-                                senderUsers[request.fromId] = user
-                            }
-                        }
-                    }
-                }
+                )
             }
         }
         .navigationTitle("Friend Requests")
     }
 }
 
+struct FriendRequestRowView: View {
+    let request: FriendRequest
+    let senderUser: ChatUser?
+    let onAppear: () -> Void
+    let onAccept: () -> Void
+    let onReject: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            profileImageView
+            userInfoView
+            Spacer()
+            actionButtonsView
+        }
+        .padding(.vertical, 8)
+        .onAppear {
+            onAppear()
+        }
+    }
+    
+    @ViewBuilder
+    private var profileImageView: some View {
+        if let user = senderUser {
+            CachedAsyncImage(url: user.imageUrl) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Circle()
+                    .fill(Color.secondary.opacity(0.3))
+            }
+            .frame(width: 44, height: 44)
+            .clipShape(Circle())
+        } else {
+            Circle()
+                .fill(Color.secondary.opacity(0.3))
+                .frame(width: 44, height: 44)
+        }
+    }
+    
+    @ViewBuilder
+    private var userInfoView: some View {
+        VStack(alignment: .leading) {
+            if let user = senderUser {
+                Text(user.displayName)
+                    .font(.headline)
+                Text(user.email)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("Loading...")
+                    .foregroundColor(.secondary)
+            }
+            
+            Text(request.createdAt, style: .date)
+                .font(.caption)
+                .foregroundColor(.gray)
+        }
+    }
+    
+    private var actionButtonsView: some View {
+        HStack(spacing: 8) {
+            acceptButton
+            declineButton
+        }
+    }
+    
+    private var acceptButton: some View {
+        Button(action: onAccept) {
+            Text("Accept")
+                .font(.subheadline)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(6)
+        }
+    }
+    
+    private var declineButton: some View {
+        Button(action: onReject) {
+            Text("Decline")
+                .font(.subheadline)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(6)
+        }
+    }
+}
+
 struct FriendRequestsView_Previews: PreviewProvider {
     static var previews: some View {
-        // Provide dummy environment objects for preview
-        let current = ChatUser(id: "1", displayName: "Alice", email: "a@a.com", createdAt: Date(), profilePicture: "https://api.dicebear.com/7.x/adventurer/jpg?seed=1")
+        let current = ChatUser(
+            id: "1",
+            displayName: "Alice",
+            email: "a@a.com",
+            createdAt: Date(),
+            profilePicture: "https://api.dicebear.com/9.x/adventurer/jpg?seed=1"
+        )
         let vm = FriendsViewModel(currentUser: current)
 
         return NavigationStack {

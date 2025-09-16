@@ -14,8 +14,22 @@ struct ContentView: View {
     var body: some View {
         Group {
             if let user = auth.appUser {
-                ChatListView()
-                    .environmentObject(FriendsViewModel(currentUser: user))
+                TabView {
+                    ChatListView()
+                        .tabItem {
+                            Image(systemName: "person.badge.plus")
+                            Text("Chats")
+                        }
+                    
+                    FriendRequestsView()
+                        .tabItem {
+                            Image(systemName: "person.2")
+                            Text("Friend Request")
+                        }
+                        .badge(2)
+                }
+                .environmentObject(FriendsViewModel(currentUser: user))
+                .environmentObject(UsersViewModel(currentUser: user))
             } else {
                 NavigationView {
                     if showingLogin {

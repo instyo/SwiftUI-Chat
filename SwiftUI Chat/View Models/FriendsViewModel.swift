@@ -11,56 +11,53 @@ import FirebaseFirestore
 class FriendsViewModel: ObservableObject {
     private let db = Firestore.firestore()
     @Published var friendRequests: [FriendRequest] = []
-    @Published var friends: [ChatUser] = []
-
-    let currentUser: ChatUser
-
+    @Published var requestedUserIds: Set<String> = []
+    @Published var receivedUserIds: Set<String> = []
+    
+    private let currentUser: ChatUser
+    
+    // Add these to store listener references
+    private var sentRequestListener: ListenerRegistration?
+    private var receivedRequestListener: ListenerRegistration?
+    private var listenFriendRequest: ListenerRegistration?
+    
     init(currentUser: ChatUser) {
         self.currentUser = currentUser
-        listenForRequests()
-        listenForFriends()
+        listenForSentRequest()
+        listenForReceivedRequest()
+        listenAllFriendRequest()
     }
     
-    func searchUsers(byEmail email: String, completion: @escaping ([ChatUser]) -> Void) {
-        print("🔍 [SearchUsers] Starting search for email: \(email)")
+    deinit {
+        sentRequestListener?.remove()
+        receivedRequestListener?.remove()
+        listenFriendRequest?.remove()
+    }
+    
+    func listenAllFriendRequest() {
         
-        Firestore.firestore().collection("users")
-            .whereField("email", isEqualTo: email)
-            .getDocuments { snap, err in
-                if let err = err {
-                    print("❌ [SearchUsers] Error fetching users: \(err.localizedDescription)")
-                    completion([])
+        guard let toUserId = currentUser.id else { return }
+        
+        listenFriendRequest = db.collection("friend_requests")
+            .addSnapshotListener { [weak self] snap, error in
+                if let error = error {
+                    print("❌ Error listening for received requests: \(error.localizedDescription)")
                     return
                 }
                 
-                guard let docs = snap?.documents else {
-                    print("⚠️ [SearchUsers] No documents found for email: \(email)")
-                    completion([])
-                    return
+                guard let docs = snap?.documents else { return }
+                
+                DispatchQueue.main.async {
+                    self?.friendRequests = snap?.documents.compactMap { doc in
+                        try? doc.data(as: FriendRequest.self)
+                    } ?? []
                 }
-                
-                print("✅ [SearchUsers] Found \(docs.count) document(s) for email: \(email)")
-                
-                let users = docs.compactMap { doc -> ChatUser? in
-                    do {
-                        let user = try doc.data(as: ChatUser.self)
-                        print("👤 [SearchUsers] Parsed user: \(user)")
-                        return user
-                    } catch {
-                        print("⚠️ [SearchUsers] Failed to decode user from docID: \(doc.documentID), error: \(error)")
-                        return nil
-                    }
-                }
-                
-                print("📦 [SearchUsers] Returning \(users.count) user(s)")
-                completion(users)
             }
     }
-
-
+    
     func sendFriendRequest(to userId: String) {
         Firestore.firestore()
-            .collection("friendRequests")
+            .collection("friend_requests")
             .whereField("fromUserId", isEqualTo: currentUser.id ?? "")
             .whereField("toUserId", isEqualTo: userId)
             .whereField("status", isEqualTo: "pending")
@@ -77,77 +74,83 @@ class FriendsViewModel: ObservableObject {
                 
                 // safe to add new request
                 Firestore.firestore()
-                    .collection("friendRequests")
+                    .collection("friend_requests")
                     .addDocument(data: [
                         "fromUserId": self?.currentUser.id ?? "",
+                        "fromUserName": self?.currentUser.displayName ?? "",
+                        "fromUserEmail": self?.currentUser.email ?? "",
+                        "fromUserProfilePicture": self?.currentUser.profilePicture ?? "",
                         "toUserId": userId,
                         "status": "pending",
                         "createdAt": Timestamp()
                     ])
             }
-
+        
     }
-
+    
     func acceptRequest(_ request: FriendRequest) {
         guard let id = request.id else { return }
-
+        
         db.collection("friend_requests").document(id).updateData([
             "status": "accepted"
         ])
-
+        
         // Add each other as friends
-        let friendData = ["id": request.fromId, "createdAt": Timestamp()] as [String: Any]
+        let friendData = ["id": request.fromUserId, "createdAt": Timestamp()] as [String: Any]
         db.collection("users").document(currentUser.id ?? "")
-            .collection("friends").document(request.fromId)
+            .collection("friends").document(request.fromUserId)
             .setData(friendData)
-
+        
         let reverseData = ["id": currentUser.id ?? "", "createdAt": Timestamp()] as [String: Any]
-        db.collection("users").document(request.fromId)
+        db.collection("users").document(request.fromUserId)
             .collection("friends").document(currentUser.id ?? "")
             .setData(reverseData)
     }
-
+    
     func rejectRequest(_ request: FriendRequest) {
         guard let id = request.id else { return }
         db.collection("friend_requests").document(id).updateData([
             "status": "rejected"
         ])
     }
-
-    private func listenForRequests() {
-        db.collection("friend_requests")
-            .whereField("toId", isEqualTo: currentUser.id ?? "")
-            .whereField("status", isEqualTo: "pending")
-            .addSnapshotListener { [weak self] snap, _ in
+    
+    func listenForSentRequest() {
+        guard let fromId = currentUser.id else { return }
+        
+        sentRequestListener = db.collection("friend_requests")
+            .whereField("fromUserId", isEqualTo: fromId)
+            .addSnapshotListener { [weak self] snap, error in
+                if let error = error {
+                    print("❌ Error listening for sent requests: \(error.localizedDescription)")
+                    return
+                }
+                
                 guard let docs = snap?.documents else { return }
-                self?.friendRequests = docs.compactMap { try? $0.data(as: FriendRequest.self) }
+                
+                DispatchQueue.main.async {
+                    self?.requestedUserIds = Set(docs.compactMap { $0["toUserId"] as? String })
+                    print("✅ Updated requested user IDs: \(self?.requestedUserIds ?? [])")
+                }
             }
     }
-
-    private func listenForFriends() {
-        db.collection("users").document(currentUser.id ?? "").collection("friends")
-            .addSnapshotListener { [weak self] snap, _ in
+    
+    func listenForReceivedRequest() {
+        guard let toUserId = currentUser.id else { return }
+        
+        receivedRequestListener = db.collection("friend_requests")
+            .whereField("toUserId", isEqualTo: toUserId)
+            .addSnapshotListener { [weak self] snap, error in
+                if let error = error {
+                    print("❌ Error listening for received requests: \(error.localizedDescription)")
+                    return
+                }
+                
                 guard let docs = snap?.documents else { return }
-                self?.friends = docs.compactMap { try? $0.data(as: ChatUser.self) }
+                
+                DispatchQueue.main.async {
+                    self?.receivedUserIds = Set(docs.compactMap { $0["fromUserId"] as? String })
+                    print("✅ Updated received user IDs: \(self?.receivedUserIds ?? [])")
+                }
             }
-    }
-
-    // Fetch a ChatUser by id. Useful for resolving the sender of a FriendRequest
-    func fetchUser(userId: String, completion: @escaping (ChatUser?) -> Void) {
-        db.collection("users").document(userId).getDocument { snapshot, err in
-            if let err = err {
-                print("❌ [fetchUser] Error fetching user (\(userId)): \(err.localizedDescription)")
-                completion(nil)
-                return
-            }
-
-            guard let snapshot = snapshot, snapshot.exists else {
-                completion(nil)
-                return
-            }
-
-            let user = try? snapshot.data(as: ChatUser.self)
-            completion(user)
-        }
     }
 }
