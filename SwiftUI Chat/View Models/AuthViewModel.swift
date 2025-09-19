@@ -12,7 +12,7 @@ import FirebaseFirestore
 final class AuthViewModel : ObservableObject {
     static let shared = AuthViewModel()
     @Published var firebaseUser: FirebaseAuth.User?
-    @Published var appUser: ChatUser?
+    @Published var appUser: UserModel?
     
     private var authListener: AuthStateDidChangeListenerHandle?
     
@@ -48,7 +48,7 @@ final class AuthViewModel : ObservableObject {
             let randomSeed = Int.random(in: 10...10000)
             let profilePicture = "https://api.dicebear.com/9.x/adventurer/jpg?seed=\(randomSeed)"
             
-            let userDoc = ChatUser(id: user.uid, displayName: displayName, email: email, createdAt: Date(), profilePicture: profilePicture)
+            let userDoc = UserModel(id: user.uid, name: displayName, email: email, photoURL: profilePicture, createdAt: Date())
             
             do {
                 try Firestore.firestore().collection("users").document(user.uid).setData(from: userDoc) { error in
@@ -80,7 +80,7 @@ final class AuthViewModel : ObservableObject {
         let ref = Firestore.firestore().collection("users").document(uid)
         ref.getDocument { snapshot, error in
             guard let doc = snapshot, doc.exists else { return }
-            self.appUser = try? doc.data(as: ChatUser.self)
+            self.appUser = try? doc.data(as: UserModel.self)
         }
     }
 }

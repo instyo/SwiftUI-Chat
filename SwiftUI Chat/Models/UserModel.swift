@@ -14,11 +14,15 @@ struct UserModel: Identifiable, Codable {
     var email: String
     var photoURL: String?
     var createdAt: Date
+    
+    var imageUrl: URL? {
+        return URL(string: photoURL ?? "")
+    }
 }
 
 struct FriendModel: Identifiable, Codable {
     @DocumentID var id: String?
-    var status: String   // "incoming" | "outgoing" | "accepted"
+    var status: FriendStatus
     var createdAt: Date
 }
 
@@ -37,4 +41,17 @@ struct MessageModel: Identifiable, Codable {
     var text: String
     var createdAt: Date
     var readBy: [String]?
+}
+
+enum FriendStatus: String, Codable {
+    case incoming
+    case outgoing
+    case accepted
+    case blocked
+}
+
+struct UserWithFriendStatus: Identifiable {
+    var user: UserModel
+    var status: FriendStatus?  // nil if no relationship
+    var id: String { user.id ?? UUID().uuidString }
 }
